@@ -10,6 +10,8 @@ import GestionStockIngredients from "./Ingredients/GestionStockIngredients";
 import GestionRepas from "./Repas/GestionRepas";
 import PlanificationMenus from "./Menu/PlanificationMenus";
 import AfficherRepas from "./Repas/AfficherRepas";
+import GestionCartes from "./Carte/GestionCartes";
+import HistoriqueRecharge from "./Carte/HistoriqueRecharge";
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
         <Route path="/gestion_repas" element={<GestionRepas />} />
         <Route path="/gestion_menu" element={<PlanificationMenus />} />
         <Route path="/repas" elemment={<AfficherRepas />} />
+        <Route path="gestion_cartes" element={<GestionCartes />} />
+        <Route path="historique_recharge" element={<HistoriqueRecharge />} />
       </Routes>
     </div>
   );
