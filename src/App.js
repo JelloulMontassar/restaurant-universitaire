@@ -7,6 +7,7 @@ import Profil from "./Utilisateur/Profil";
 import RechargeCarte from "./Carte/RechargeCarte";
 import HomePage from "./Home/home";
 import GestionStockIngredients from "./Ingredients/GestionStockIngredients";
+import GestionRepas from "./Repas/GestionRepas";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           path="/gestion_stock_ingrediant"
           element={<GestionStockIngredients />}
         />
+        <Route path="/gestion_repas" element={<GestionRepas />} />
       </Routes>
     </div>
   );
