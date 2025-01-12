@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const AjouterUtilisateur = () => {
     const [formData, setFormData] = useState({
         nomUtilisateur: "",
         prenomUtilisateur: "",
         genre: "",
+        motDePasse: "",
         email: "",
         role: "",
+        numeroTelephone: "",
     });
 
     const handleChange = (e) => {
@@ -14,17 +18,53 @@ const AjouterUtilisateur = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Form data submitted:", formData);
-        // Ajoutez ici la logique pour envoyer les données au backend
+
+        // Prepare data for the backend
+        const utilisateurData = {
+            ...formData,
+            genre: formData.genre.toUpperCase(), // Enum requires uppercase
+            role: formData.role.toUpperCase(),  // Enum requires uppercase
+        };
+
+        try {
+            const response = await axios.post(
+                "http://localhost:8080/api/utilisateurs/ajouter",
+                utilisateurData,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            console.log("Utilisateur ajouté avec succès:", response.data);
+
+            // Success SweetAlert
+            Swal.fire({
+                title: 'Succès!',
+                text: 'L\'utilisateur a été ajouté avec succès.',
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        } catch (error) {
+            console.error("Erreur lors de l'ajout de l'utilisateur:", error.response?.data || error.message);
+
+            // Error SweetAlert
+            Swal.fire({
+                title: 'Erreur!',
+                text: 'Il y a eu une erreur lors de l\'ajout de l\'utilisateur.',
+                icon: 'error',
+                confirmButtonText: 'Réessayer',
+            });
+        }
     };
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
                 <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
-                    Ajouter un Client
+                    Ajouter un Utilisateur
                 </h1>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
@@ -79,9 +119,27 @@ const AjouterUtilisateur = () => {
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         >
                             <option value="">-- Sélectionnez --</option>
-                            <option value="feminin">Féminin</option>
-                            <option value="masculin">Masculin</option>
+                            <option value="FEMININ">Féminin</option>
+                            <option value="MASCULIN">Masculin</option>
                         </select>
+                    </div>
+
+                    <div className="mb-4">
+                        <label
+                            htmlFor="motDePasse"
+                            className="block text-sm font-medium text-gray-700"
+                        >
+                            Mot de passe
+                        </label>
+                        <input
+                            type="password"
+                            id="motDePasse"
+                            name="motDePasse"
+                            value={formData.motDePasse}
+                            onChange={handleChange}
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
                     </div>
 
                     <div className="mb-4">
@@ -124,6 +182,23 @@ const AjouterUtilisateur = () => {
                         </select>
                     </div>
 
+                    <div className="mb-4">
+                        <label
+                            htmlFor="numeroTelephone"
+                            className="block text-sm font-medium text-gray-700"
+                        >
+                            Numéro de téléphone
+                        </label>
+                        <input
+                            type="tel"
+                            id="numeroTelephone"
+                            name="numeroTelephone"
+                            value={formData.numeroTelephone}
+                            onChange={handleChange}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                    </div>
+
                     <button
                         type="submit"
                         className="w-full py-2 px-4 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -136,6 +211,4 @@ const AjouterUtilisateur = () => {
     );
 };
 
-
-
-export default AjouterUtilisateur
+export default AjouterUtilisateur;
