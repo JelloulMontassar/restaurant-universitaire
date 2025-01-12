@@ -9,6 +9,7 @@ import HomePage from "./Home/home";
 import GestionStockIngredients from "./Ingredients/GestionStockIngredients";
 import GestionRepas from "./Repas/GestionRepas";
 import PlanificationMenus from "./Menu/PlanificationMenus";
+import AfficherRepas from "./Repas/AfficherRepas";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         />
         <Route path="/gestion_repas" element={<GestionRepas />} />
         <Route path="/gestion_menu" element={<PlanificationMenus />} />
+        <Route path="/repas" elemment={<AfficherRepas />} />
       </Routes>
     </div>
   );
