@@ -8,6 +8,7 @@ import RechargeCarte from "./Carte/RechargeCarte";
 import HomePage from "./Home/home";
 import GestionStockIngredients from "./Ingredients/GestionStockIngredients";
 import GestionRepas from "./Repas/GestionRepas";
+import PlanificationMenus from "./Menu/PlanificationMenus";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           element={<GestionStockIngredients />}
         />
         <Route path="/gestion_repas" element={<GestionRepas />} />
+        <Route path="/gestion_menu" element={<PlanificationMenus />} />
       </Routes>
     </div>
   );

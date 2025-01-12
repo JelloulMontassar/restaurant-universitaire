@@ -4,7 +4,7 @@ const HomePage = () => {
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Header Section */}
-            <header className="bg-green-600 text-white py-8 shadow-lg">
+            <header className="bg-blue-600 text-white py-8 shadow-lg">
                 <div className="container mx-auto text-center">
                     <h1 className="text-4xl font-bold">Restaurant Universitaire</h1>
                     <p className="mt-2 text-lg">Un endroit où les saveurs rencontrent la communauté</p>
@@ -85,7 +85,7 @@ const HomePage = () => {
             </section>
 
             {/* Footer */}
-            <footer className="bg-green-600 text-white py-6">
+            <footer className="bg-blue-600 text-white py-6">
                 <div className="container mx-auto text-center">
                     <p>&copy; 2025 Restaurant Universitaire. Tous droits réservés.</p>
                 </div>
