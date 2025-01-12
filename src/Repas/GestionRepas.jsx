@@ -16,11 +16,10 @@ const GestionRepas = () => {
 
     const [repasCrees, setRepasCrees] = useState([]);
     const [prixTotal, setPrixTotal] = useState(null);
-
-    // État pour gérer le modal
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedIngredient, setSelectedIngredient] = useState(null);
     const [ingredientQuantite, setIngredientQuantite] = useState("");
+    const [filtreType, setFiltreType] = useState(""); // Nouveau state pour filtrer par type
 
     const handleChangeRepas = (e) => {
         const { name, value } = e.target;
@@ -82,6 +81,14 @@ const GestionRepas = () => {
     const handleDeleteRepas = (id) => {
         setRepasCrees(repasCrees.filter((repas) => repas.id !== id));
     };
+
+    const handleFiltreChange = (e) => {
+        setFiltreType(e.target.value);
+    };
+
+    const filteredRepas = filtreType
+        ? repasCrees.filter((repas) => repas.type === filtreType)
+        : repasCrees;
 
     return (
         <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
@@ -162,12 +169,27 @@ const GestionRepas = () => {
                 Créer le Repas
             </button>
 
+            {/* Filtre par type de repas */}
+            <div className="mb-6">
+                <h3 className="text-lg font-bold mb-2">Filtrer par Type</h3>
+                <select
+                    value={filtreType}
+                    onChange={handleFiltreChange}
+                    className="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                    <option value="">Tous les Types</option>
+                    <option value="PETIT_DEJEUNER">Petit Déjeuner</option>
+                    <option value="DEJEUNER">Déjeuner</option>
+                    <option value="DINER">Dîner</option>
+                </select>
+            </div>
+
             {/* Liste des repas créés */}
-            {repasCrees.length > 0 && (
+            {filteredRepas.length > 0 && (
                 <div className="mt-8">
                     <h3 className="text-lg font-bold mb-2">Repas Créés</h3>
                     <ul className="list-disc list-inside">
-                        {repasCrees.map((repas) => (
+                        {filteredRepas.map((repas) => (
                             <li key={repas.id} className="flex justify-between items-center">
                                 <span>
                                     {repas.nom} ({repas.type}) - Prix Total: {repas.prixTotal.toFixed(2)} €
