@@ -1,14 +1,55 @@
 import React, { useState } from "react";
+import Swal from "sweetalert2";
 
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Email:", email);
-        console.log("Password:", password);
+        setLoading(true); // Start loading
 
+        try {
+            const response = await fetch("http://localhost:8080/api/utilisateurs/authenticate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!response.ok) {
+                // Handle non-200 responses
+                throw new Error("Authentication failed. Please check your credentials.");
+            }
+
+            const data = await response.json();
+            console.log("Authentication successful:", data);
+
+            // Save token to localStorage
+            localStorage.setItem("token", data.token);
+
+            // Show success alert
+            Swal.fire({
+                icon: "success",
+                title: "Connexion réussie",
+                text: "Vous êtes maintenant connecté !",
+                confirmButtonColor: "#4CAF50",
+            });
+        } catch (error) {
+            console.error("Error during authentication:", error);
+
+            // Show error alert
+            Swal.fire({
+                icon: "error",
+                title: "Erreur",
+                text: error.message || "Une erreur s'est produite lors de la connexion.",
+                confirmButtonColor: "#f27474",
+            });
+        } finally {
+            setLoading(false); // Stop loading
+        }
     };
 
     return (
@@ -53,8 +94,9 @@ const Login = () => {
                     <button
                         type="submit"
                         className="w-full px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:ring-indigo-300"
+                        disabled={loading}
                     >
-                        Se connecter
+                        {loading ? "Connexion en cours..." : "Se connecter"}
                     </button>
                 </form>
                 <p className="text-sm text-center text-gray-600">

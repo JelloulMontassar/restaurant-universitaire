@@ -1,51 +1,66 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 const ListUtilisateur = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      nomUtilisateur: "Dupont",
-      prenomUtilisateur: "Jean",
-      genre: "Masculin",
-      email: "jean.dupont@example.com",
-      role: "ETUDIANT",
-    },
-    {
-      id: 2,
-      nomUtilisateur: "Durand",
-      prenomUtilisateur: "Marie",
-      genre: "Féminin",
-      email: "marie.durand@example.com",
-      role: "ADMINISTRATEUR",
-    },
-    {
-      id: 3,
-      nomUtilisateur: "Martin",
-      prenomUtilisateur: "Paul",
-      genre: "Masculin",
-      email: "paul.martin@example.com",
-      role: "EMPLOYE",
-    },
-  ]);
-
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [userToEdit, setUserToEdit] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
-  const handleDelete = (id) => {
-    setUsers(users.filter((user) => user.id !== id));
-    setShowDeleteModal(false);
+  const API_URL = "http://localhost:8080/api/utilisateurs";
+
+  // Add token to Axios requests
+  const token = localStorage.getItem("token");
+  const axiosInstance = axios.create({
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  // Fetch users from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axiosInstance.get(API_URL);
+        setUsers(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const handleDelete = async (id) => {
+    try {
+      await axiosInstance.delete(`${API_URL}/supprimer/${id}`);
+      setUsers(users.filter((user) => user.id !== id));
+      setShowDeleteModal(false);
+    } catch (err) {
+      setError("Failed to delete the user.");
+    }
   };
 
-  const handleEdit = (user) => {
-    const updatedUsers = users.map((u) =>
-        u.id === user.id ? { ...u, ...user } : u
-    );
-    setUsers(updatedUsers);
-    setShowEditModal(false);
+  const handleEdit = async () => {
+    try {
+      const response = await axiosInstance.put(`${API_URL}/modifier/${userToEdit.id}`, editForm);
+      setUsers(
+          users.map((user) =>
+              user.id === response.data.id ? response.data : user
+          )
+      );
+      setShowEditModal(false);
+    } catch (err) {
+      setError("Failed to update the user.");
+    }
   };
 
   const openDeleteModal = (user) => {
@@ -55,6 +70,7 @@ const ListUtilisateur = () => {
 
   const openEditModal = (user) => {
     setUserToEdit(user);
+    setEditForm(user);
     setShowEditModal(true);
   };
 
@@ -64,6 +80,19 @@ const ListUtilisateur = () => {
     setUserToDelete(null);
     setUserToEdit(null);
   };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm({ ...editForm, [name]: value });
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -85,12 +114,8 @@ const ListUtilisateur = () => {
             <tbody>
             {users.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-100">
-                  <td className="px-4 py-2 border text-center">
-                    {user.nomUtilisateur}
-                  </td>
-                  <td className="px-4 py-2 border text-center">
-                    {user.prenomUtilisateur}
-                  </td>
+                  <td className="px-4 py-2 border text-center">{user.nomUtilisateur}</td>
+                  <td className="px-4 py-2 border text-center">{user.prenomUtilisateur}</td>
                   <td className="px-4 py-2 border text-center">{user.genre}</td>
                   <td className="px-4 py-2 border text-center">{user.email}</td>
                   <td className="px-4 py-2 border text-center">{user.role}</td>
@@ -113,7 +138,7 @@ const ListUtilisateur = () => {
             </tbody>
           </table>
 
-          {/* Modale de confirmation pour suppression */}
+          {/* Delete Modal */}
           {showDeleteModal && (
               <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
                 <div className="bg-white rounded-lg shadow-lg p-6 w-96">
@@ -141,120 +166,39 @@ const ListUtilisateur = () => {
               </div>
           )}
 
-          {/* Modale de modification */}
+          {/* Edit Modal */}
           {showEditModal && (
               <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
                 <div className="bg-white rounded-lg shadow-lg p-6 w-96">
                   <h2 className="text-lg font-bold mb-4 text-gray-800">
                     Modifier l'utilisateur
                   </h2>
-                  <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleEdit(userToEdit);
-                      }}
-                  >
+                  <form onSubmit={(e) => e.preventDefault()}>
                     <div className="mb-4">
-                      <label
-                          htmlFor="nomUtilisateur"
-                          className="block text-gray-700"
-                      >
-                        Nom
+                      <label className="block text-gray-700 font-bold mb-2">
+                        Nom :
                       </label>
                       <input
                           type="text"
-                          id="nomUtilisateur"
-                          className="w-full p-2 border border-gray-300 rounded-lg"
-                          value={userToEdit?.nomUtilisateur}
-                          onChange={(e) =>
-                              setUserToEdit({
-                                ...userToEdit,
-                                nomUtilisateur: e.target.value,
-                              })
-                          }
+                          name="nomUtilisateur"
+                          value={editForm.nomUtilisateur}
+                          onChange={handleEditChange}
+                          className="w-full px-3 py-2 border rounded-lg"
                       />
                     </div>
-
                     <div className="mb-4">
-                      <label
-                          htmlFor="prenomUtilisateur"
-                          className="block text-gray-700"
-                      >
-                        Prénom
+                      <label className="block text-gray-700 font-bold mb-2">
+                        Prénom :
                       </label>
                       <input
                           type="text"
-                          id="prenomUtilisateur"
-                          className="w-full p-2 border border-gray-300 rounded-lg"
-                          value={userToEdit?.prenomUtilisateur}
-                          onChange={(e) =>
-                              setUserToEdit({
-                                ...userToEdit,
-                                prenomUtilisateur: e.target.value,
-                              })
-                          }
+                          name="prenomUtilisateur"
+                          value={editForm.prenomUtilisateur}
+                          onChange={handleEditChange}
+                          className="w-full px-3 py-2 border rounded-lg"
                       />
                     </div>
-
-                    <div className="mb-4">
-                      <label htmlFor="genre" className="block text-gray-700">
-                        Genre
-                      </label>
-                      <select
-                          id="genre"
-                          className="w-full p-2 border border-gray-300 rounded-lg"
-                          value={userToEdit?.genre}
-                          onChange={(e) =>
-                              setUserToEdit({
-                                ...userToEdit,
-                                genre: e.target.value,
-                              })
-                          }
-                      >
-                        <option value="Masculin">Masculin</option>
-                        <option value="Féminin">Féminin</option>
-                      </select>
-                    </div>
-
-                    <div className="mb-4">
-                      <label htmlFor="email" className="block text-gray-700">
-                        Email
-                      </label>
-                      <input
-                          type="email"
-                          id="email"
-                          className="w-full p-2 border border-gray-300 rounded-lg"
-                          value={userToEdit?.email}
-                          onChange={(e) =>
-                              setUserToEdit({
-                                ...userToEdit,
-                                email: e.target.value,
-                              })
-                          }
-                      />
-                    </div>
-
-                    <div className="mb-4">
-                      <label htmlFor="role" className="block text-gray-700">
-                        Rôle
-                      </label>
-                      <select
-                          id="role"
-                          className="w-full p-2 border border-gray-300 rounded-lg"
-                          value={userToEdit?.role}
-                          onChange={(e) =>
-                              setUserToEdit({
-                                ...userToEdit,
-                                role: e.target.value,
-                              })
-                          }
-                      >
-                        <option value="ETUDIANT">ETUDIANT</option>
-                        <option value="EMPLOYE">EMPLOYE</option>
-                        <option value="ADMINISTRATEUR">ADMINISTRATEUR</option>
-                      </select>
-                    </div>
-
+                    {/* Add other fields as needed */}
                     <div className="flex justify-end">
                       <button
                           onClick={closeModal}
@@ -263,10 +207,10 @@ const ListUtilisateur = () => {
                         Annuler
                       </button>
                       <button
-                          type="submit"
+                          onClick={handleEdit}
                           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
                       >
-                        Sauvegarder
+                        Enregistrer
                       </button>
                     </div>
                   </form>
