@@ -1,77 +1,45 @@
 import React, { useState } from "react";
 
 const RecuPaiement = () => {
-    // Fake data
-    const fakePaiements = [
-        {
-            id: 1,
-            utilisateurId: 123,
-            datePaiement: "2025-01-12T10:30:00",
-            montant: 20,
-            type: "Carte Bancaire",
-        },
-        {
-            id: 2,
-            utilisateurId: 123,
-            datePaiement: "2025-01-12T14:15:00",
-            montant: 15,
-            type: "Espèces",
-        },
-    ];
-
     const [userId, setUserId] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
     const [recu, setRecu] = useState("");
     const [message, setMessage] = useState("");
 
-    const handleGenererRecu = () => {
-        // Validation
+    const handleGenererRecu = async () => {
         if (!userId || !selectedDate) {
             setMessage("Veuillez remplir l'ID utilisateur et sélectionner une date.");
             setRecu("");
             return;
         }
 
-        // Convertir la date en début et fin de journée
-        const startOfDay = new Date(selectedDate);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(selectedDate);
-        endOfDay.setHours(23, 59, 59, 999);
+        try {
+            const requestBody = {
+                utilisateurId: parseInt(userId),
+                datePaiement: selectedDate,
+            };
 
-        // Filtrer les paiements correspondants
-        const paiementsTrouves = fakePaiements.filter(
-            (paiement) =>
-                paiement.utilisateurId.toString() === userId &&
-                new Date(paiement.datePaiement) >= startOfDay &&
-                new Date(paiement.datePaiement) <= endOfDay
-        );
+            const response = await fetch("http://localhost:8080/api/cartes-etudiants/recu-paiement", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            });
 
-        if (paiementsTrouves.length === 0) {
-            setMessage("Aucun paiement trouvé pour cet utilisateur à cette date.");
+            if (response.ok) {
+                const data = await response.text(); // The backend returns a plain text receipt
+                setRecu(data);
+                setMessage("");
+            } else {
+                const errorText = await response.text();
+                setMessage(`Erreur : ${errorText}`);
+                setRecu("");
+            }
+        } catch (error) {
+            setMessage(`Erreur lors de la connexion au serveur : ${error.message}`);
             setRecu("");
-            return;
         }
-
-        // Générer le reçu
-        let total = 0;
-        let recuString = "=== Reçu de Paiement ===\n";
-        recuString += `ID Utilisateur : ${userId}\n`;
-        recuString += `Date : ${selectedDate}\n`;
-        recuString += "========================\n";
-
-        paiementsTrouves.forEach((paiement) => {
-            recuString += `ID Paiement : ${paiement.id}\n`;
-            recuString += `Montant : ${paiement.montant} €\n`;
-            recuString += `Type : ${paiement.type}\n`;
-            recuString += "------------------------\n";
-            total += paiement.montant;
-        });
-
-        recuString += `Total Payé : ${total} €\n`;
-        recuString += "========================";
-
-        setRecu(recuString);
-        setMessage("");
     };
 
     return (

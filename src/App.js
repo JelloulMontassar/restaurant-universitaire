@@ -15,31 +15,125 @@ import HistoriqueRecharge from "./Carte/HistoriqueRecharge";
 import PaiementRepas from "./Repas/PaiementRepas";
 import RecuPaiement from "./Repas/RecuPaiement";
 import Dashboard from "./Dashboard/Dashboard";
+import ProtectedRoute from "./ProtectedRoute";
+import NotAuthorized from "./NotAuthorized";
 
 function App() {
   return (
-    <div>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="login" element={<Login />} />
-        <Route path="/ajouter_utilisateur" element={<AjouterUtilisateur />} />
-        <Route path="/liste_utilisateur" element={<ListUtilisateur />} />
-        <Route path="/profil" element={<Profil />} />
-        <Route path="/recharge_carte" element={<RechargeCarte />} />
-        <Route
-          path="/gestion_stock_ingrediant"
-          element={<GestionStockIngredients />}
-        />
-        <Route path="/gestion_repas" element={<GestionRepas />} />
-        <Route path="/gestion_menu" element={<PlanificationMenus />} />
-        <Route path="/repas" element={<AfficherRepas />} />
-        <Route path="/gestion_cartes" element={<GestionCartes />} />
-        <Route path="/historique_recharge" element={<HistoriqueRecharge />} />
-        <Route path="/paiement_repas" element={<PaiementRepas />} />
-        <Route path="/recu_paiement" element={<RecuPaiement />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-    </div>
+      <div>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="login" element={<Login />} />
+
+          {/* Role-Based Protected Routes */}
+          <Route
+              path="/ajouter_utilisateur"
+              element={
+                <ProtectedRoute allowedRoles={["ADMINISTRATEUR"]}>
+                  <AjouterUtilisateur />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/liste_utilisateur"
+              element={
+                <ProtectedRoute allowedRoles={["ADMINISTRATEUR"]}>
+                  <ListUtilisateur />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/profil"
+              element={
+                <ProtectedRoute allowedRoles={["ETUDIANT", "EMPLOYE", "ADMINISTRATEUR"]}>
+                  <Profil />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/recharge_carte"
+              element={
+                <ProtectedRoute allowedRoles={["EMPLOYE"]}>
+                  <RechargeCarte />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/gestion_stock_ingrediant"
+              element={
+                <ProtectedRoute allowedRoles={["ADMINISTRATEUR"]}>
+                  <GestionStockIngredients />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/gestion_repas"
+              element={
+                <ProtectedRoute allowedRoles={["ADMINISTRATEUR"]}>
+                  <GestionRepas />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/gestion_menu"
+              element={
+                <ProtectedRoute allowedRoles={["ADMINISTRATEUR"]}>
+                  <PlanificationMenus />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/repas"
+              element={
+                <ProtectedRoute allowedRoles={["ETUDIANT", "EMPLOYE", "ADMINISTRATEUR"]}>
+                  <AfficherRepas />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/gestion_cartes"
+              element={
+                <ProtectedRoute allowedRoles={["ADMINISTRATEUR"]}>
+                  <GestionCartes />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/historique_recharge"
+              element={
+                <ProtectedRoute allowedRoles={["EMPLOYE", "ADMINISTRATEUR"]}>
+                  <HistoriqueRecharge />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/paiement_repas"
+              element={
+                <ProtectedRoute allowedRoles={["ETUDIANT"]}>
+                  <PaiementRepas />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/recu_paiement"
+              element={
+                <ProtectedRoute allowedRoles={["ETUDIANT"]}>
+                  <RecuPaiement />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["ADMINISTRATEUR", "EMPLOYE"]}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+          />
+          <Route path={"/not-authorized"} element={<NotAuthorized />} />
+        </Routes>
+      </div>
   );
 }
 
