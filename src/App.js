@@ -15,6 +15,7 @@ import HistoriqueRecharge from "./Carte/HistoriqueRecharge";
 import PaiementRepas from "./Repas/PaiementRepas";
 import RecuPaiement from "./Repas/RecuPaiement";
 import Dashboard from "./Dashboard/Dashboard";
+import MenuList from "./Menu/MenuList";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
         <Route path="/paiement_repas" element={<PaiementRepas />} />
         <Route path="/recu_paiement" element={<RecuPaiement />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/liste_menu" element={<MenuList />} />
       </Routes>
     </div>
   );
