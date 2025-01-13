@@ -23,7 +23,7 @@ function App() {
         <Route path="login" element={<Login />} />
         <Route path="/ajouter_utilisateur" element={<AjouterUtilisateur />} />
         <Route path="/liste_utilisateur" element={<ListUtilisateur />} />
-        <Route path="profil" element={<Profil />} />
+        <Route path="/profil" element={<Profil />} />
         <Route path="/recharge_carte" element={<RechargeCarte />} />
         <Route
           path="/gestion_stock_ingrediant"
@@ -31,7 +31,7 @@ function App() {
         />
         <Route path="/gestion_repas" element={<GestionRepas />} />
         <Route path="/gestion_menu" element={<PlanificationMenus />} />
-        <Route path="/repas" elemment={<AfficherRepas />} />
+        <Route path="/repas" element={<AfficherRepas />} />
         <Route path="/gestion_cartes" element={<GestionCartes />} />
         <Route path="/historique_recharge" element={<HistoriqueRecharge />} />
         <Route path="/paiement_repas" element={<PaiementRepas />} />

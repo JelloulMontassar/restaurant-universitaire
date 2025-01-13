@@ -1,58 +1,59 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 const RechargeCarte = () => {
-    // Fake data for testing
-    const fakeData = {
-        1: {
-            id: 1,
-            solde: 2247.6,
-            statut: "ACTIVE",
-            createdAt: "2025-01-03T19:54:40",
-            updatedAt: "2025-01-11T18:29:39",
-            version: 4,
-            etudiant: {
-                id: 15,
-                nomUtilisateur: "test",
-                prenomUtilisateur: "test",
-                genre: "FEMININ",
-                email: "test10@gmail.com",
-                role: "ETUDIANT",
-                createdAt: "2025-01-03T19:54:10",
-                updatedAt: "2025-01-03T19:54:10",
-            },
-        },
-    };
-
     const [cardNumber, setCardNumber] = useState("");
     const [cardData, setCardData] = useState(null);
     const [error, setError] = useState("");
     const [rechargeAmount, setRechargeAmount] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSearch = () => {
-        const card = fakeData[cardNumber];
-        if (card) {
-            setCardData(card);
+    const handleSearch = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`http://localhost:8080/api/cartes-etudiants/${cardNumber}`);
+            setCardData(response.data);
             setError("");
-        } else {
+        } catch (err) {
             setCardData(null);
             setError(`La carte avec le numéro ${cardNumber} n'a pas été trouvée.`);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleRecharge = () => {
+    const handleRecharge = async () => {
         if (rechargeAmount && cardData) {
-            const newSolde = parseFloat(cardData.solde) + parseFloat(rechargeAmount);
-            setCardData({ ...cardData, solde: newSolde });
-            setRechargeAmount("");
-            alert("La carte a été rechargée avec succès !");
+            try {
+                setLoading(true);
+                const response = await axios.post(
+                    `http://localhost:8080/api/cartes-etudiants/recharger/${cardData.id}?solde=${rechargeAmount}`
+                );
+                const newSolde = cardData.solde + parseFloat(rechargeAmount);
+                setCardData({ ...cardData, solde: newSolde });
+                setRechargeAmount("");
+                alert("La carte a été rechargée avec succès !");
+            } catch (err) {
+                alert("Erreur lors de la recharge de la carte.");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
-    const toggleCardStatus = () => {
+    const toggleCardStatus = async () => {
         if (cardData) {
             const newStatus = cardData.statut === "ACTIVE" ? "BLOQUEE" : "ACTIVE";
-            setCardData({ ...cardData, statut: newStatus });
-            alert(`La carte est maintenant ${newStatus}.`);
+            try {
+                setLoading(true);
+                await axios.post(`http://localhost:8080/api/cartes-etudiants/bloquer/${cardData.id}`, { statut: newStatus });
+                setCardData({ ...cardData, statut: newStatus });
+                alert(`La carte est maintenant ${newStatus}.`);
+            } catch (err) {
+                alert("Erreur lors du changement de statut de la carte.");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -73,7 +74,7 @@ const RechargeCarte = () => {
                     onClick={handleSearch}
                     className="mt-2 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
                 >
-                    Rechercher
+                    {loading ? "Chargement..." : "Rechercher"}
                 </button>
             </div>
 
@@ -85,7 +86,7 @@ const RechargeCarte = () => {
                 <div className="p-4 bg-gray-100 rounded-lg shadow-md">
                     <h3 className="text-xl font-bold">Détails de la Carte</h3>
                     <p><strong>Numéro de Carte:</strong> {cardData.id}</p>
-                    <p><strong>Solde:</strong> {cardData.solde.toFixed(2)} €</p>
+                    <p><strong>Solde:</strong> {cardData.solde.toFixed(2)} TND</p>
                     <p><strong>Statut:</strong> {cardData.statut}</p>
                     <p><strong>Étudiant:</strong> {`${cardData.etudiant.prenomUtilisateur} ${cardData.etudiant.nomUtilisateur}`}</p>
                     <p><strong>Email:</strong> {cardData.etudiant.email}</p>
@@ -107,7 +108,7 @@ const RechargeCarte = () => {
                         onClick={handleRecharge}
                         className="mt-2 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
                     >
-                        Recharger
+                        {loading ? "Rechargement..." : "Recharger"}
                     </button>
                 </div>
             )}
@@ -118,9 +119,9 @@ const RechargeCarte = () => {
                     <button
                         onClick={toggleCardStatus}
                         className={`w-full py-2 rounded-md text-white font-bold ${cardData.statut === "ACTIVE"
-                                ? "bg-red-500 hover:bg-red-600"
-                                : "bg-green-500 hover:bg-green-600"
-                            }`}
+                            ? "bg-red-500 hover:bg-red-600"
+                            : "bg-green-500 hover:bg-green-600"
+                        }`}
                     >
                         {cardData.statut === "ACTIVE" ? "Bloquer la Carte" : "Débloquer la Carte"}
                     </button>

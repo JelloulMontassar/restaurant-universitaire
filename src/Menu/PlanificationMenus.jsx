@@ -1,31 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const PlanificationMenus = () => {
-    // État pour les menus hebdomadaires et quotidiens
+    // États pour les menus et les repas
     const [typeMenu, setTypeMenu] = useState(""); // "HEBDOMADAIRE" ou "QUOTIDIEN"
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
     const [repasIdsHebdo, setRepasIdsHebdo] = useState([]);
     const [repasIdsQuotidien, setRepasIdsQuotidien] = useState([]);
+    const [repasDisponibles, setRepasDisponibles] = useState([]);
 
-    const [repasDisponibles] = useState([
-        { id: 1, nom: "Pain complet", type: "PETIT_DEJEUNER" },
-        { id: 2, nom: "Beurre", type: "DEJEUNER" },
-        { id: 3, nom: "Œufs", type: "DINER" },
-        { id: 4, nom: "Tomate", type: "PETIT_DEJEUNER" },
-        { id: 5, nom: "Pâtes", type: "DEJEUNER" },
-        { id: 6, nom: "Salade", type: "DINER" },
-        { id: 7, nom: "Croissant", type: "PETIT_DEJEUNER" },
-        { id: 8, nom: "Poulet", type: "DEJEUNER" },
-        { id: 9, nom: "Pizza", type: "DINER" },
-        { id: 10, nom: "Yaourt", type: "PETIT_DEJEUNER" },
-        { id: 11, nom: "Légumes", type: "DEJEUNER" },
-        { id: 12, nom: "Poisson", type: "DINER" },
-        // Plus d'ingrédients ici
-    ]);
+    // Récupérer les repas disponibles depuis l'API
+    useEffect(() => {
+        axios.get("http://localhost:8080/api/repas")
+            .then((response) => {
+                setRepasDisponibles(response.data); // Sauvegarder les repas récupérés depuis l'API
+            })
+            .catch((error) => {
+                console.error("Erreur lors de la récupération des repas :", error);
+            });
+    }, []);
 
-    // Gérer le changement du type de menu (hebdomadaire ou quotidien)
+    // Gérer le changement du type de menu
     const handleChangeTypeMenu = (e) => {
         setTypeMenu(e.target.value);
     };
@@ -80,7 +77,7 @@ const PlanificationMenus = () => {
             ? {
                 startDate,
                 endDate,
-                repasIds: repasIdsHebdo,
+                repasIds: repasIdsHebdo.map(dayIds => dayIds.map(id => id)), // Ensure repasIdsHebdo is an array of arrays
                 type: "HEBDOMADAIRE",
             }
             : {
@@ -88,8 +85,16 @@ const PlanificationMenus = () => {
                 repasIds: repasIdsQuotidien,
             };
 
-        console.log("Menu Sauvegardé :", menuData);
+        // Send the request to the backend to save the menu
+        axios.post("http://localhost:8080/api/menus/planifier-hebdomadaire", menuData)
+            .then((response) => {
+                console.log("Menu Sauvegardé :", response.data);
+            })
+            .catch((error) => {
+                console.error("Erreur lors de la sauvegarde du menu :", error);
+            });
     };
+
 
     return (
         <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
@@ -209,9 +214,9 @@ const PlanificationMenus = () => {
             <div className="mt-6">
                 <button
                     onClick={handleSaveMenu}
-                    className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                    className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                 >
-                    Sauvegarder le menu
+                    Sauvegarder le Menu
                 </button>
             </div>
         </div>
