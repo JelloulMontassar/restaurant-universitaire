@@ -17,6 +17,7 @@ import RecuPaiement from "./Repas/RecuPaiement";
 import Dashboard from "./Dashboard/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import NotAuthorized from "./NotAuthorized";
+import MenuList from "./Menu/MenuList";
 
 function App() {
   return (
@@ -132,9 +133,12 @@ function App() {
               }
           />
           <Route path={"/not-authorized"} element={<NotAuthorized />} />
+            <Route path="/liste_menu" element={<MenuList />} />
+
         </Routes>
       </div>
-  );
-}
+    );
 
+}
 export default App;
+
