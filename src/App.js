@@ -13,6 +13,7 @@ import AfficherRepas from "./Repas/AfficherRepas";
 import GestionCartes from "./Carte/GestionCartes";
 import HistoriqueRecharge from "./Carte/HistoriqueRecharge";
 import PaiementRepas from "./Repas/PaiementRepas";
+import RecuPaiement from "./Repas/RecuPaiement";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="/gestion_cartes" element={<GestionCartes />} />
         <Route path="/historique_recharge" element={<HistoriqueRecharge />} />
         <Route path="/paiement_repas" element={<PaiementRepas />} />
+        <Route path="/recu_paiement" element={<RecuPaiement />} />
       </Routes>
     </div>
   );
