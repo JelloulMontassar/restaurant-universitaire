@@ -5,6 +5,10 @@ const HistoriqueRecharge = () => {
     const [history, setHistory] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Retrieve the token from localStorage or sessionStorage
+    const token = localStorage.getItem("token"); // Replace with actual token retrieval method
 
     const handleSearch = async () => {
         if (!cardId) {
@@ -17,7 +21,14 @@ const HistoriqueRecharge = () => {
         setError("");
 
         try {
-            const response = await fetch(`http://localhost:8080/api/cartes-etudiants/historique-recharge/${cardId}`);
+            const response = await fetch(`http://localhost:8080/api/cartes-etudiants/historique-recharge/${cardId}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,  // Add the token here
+                    "Content-Type": "application/json",  // Make sure to set the content type
+                },
+            });
+
             if (!response.ok) {
                 throw new Error("Erreur lors de la récupération des données.");
             }
@@ -36,6 +47,17 @@ const HistoriqueRecharge = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const openModal = () => {
+        setError("");
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setCardId("");
+        setError("");
+        setIsModalOpen(false);
     };
 
     return (

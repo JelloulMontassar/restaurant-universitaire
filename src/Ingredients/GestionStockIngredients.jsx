@@ -8,10 +8,21 @@ const GestionStockIngredients = () => {
     const [form, setForm] = useState({ nom: "", quantite: "", seuil: "", prix: "" });
     const [editingId, setEditingId] = useState(null);
 
+    // Retrieve the token from localStorage or sessionStorage
+    const token = localStorage.getItem("token"); // Adjust this to your token storage method
+
+    // Axios instance with Authorization header
+    const axiosInstance = axios.create({
+        headers: {
+            "Authorization": `Bearer ${token}`, // Add token to Authorization header
+            "Content-Type": "application/json"
+        }
+    });
+
     // Fetch ingredients from the API
     const fetchIngredients = async () => {
         try {
-            const response = await axios.get("http://localhost:8080/api/ingredients");
+            const response = await axiosInstance.get("http://localhost:8080/api/ingredients");
             setIngredients(response.data);
         } catch (error) {
             console.error("Erreur lors du chargement des ingrédients:", error);
@@ -31,12 +42,12 @@ const GestionStockIngredients = () => {
         try {
             if (editingId) {
                 // Update ingredient
-                await axios.put(`http://localhost:8080/api/ingredients/${editingId}`, form);
+                await axiosInstance.put(`http://localhost:8080/api/ingredients/${editingId}`, form);
                 fetchIngredients();
                 setEditingId(null);
             } else {
                 // Add new ingredient
-                await axios.post("http://localhost:8080/api/ingredients/ajouter", form);
+                await axiosInstance.post("http://localhost:8080/api/ingredients/ajouter", form);
                 fetchIngredients();
             }
             setForm({ nom: "", quantite: "", seuil: "", prix: "" });
@@ -57,7 +68,7 @@ const GestionStockIngredients = () => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`http://localhost:8080/api/ingredients/${id}`);
+            await axiosInstance.delete(`http://localhost:8080/api/ingredients/${id}`);
             fetchIngredients();
         } catch (error) {
             console.error("Erreur lors de la suppression de l'ingrédient:", error);

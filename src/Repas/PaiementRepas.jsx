@@ -18,8 +18,12 @@ const PaiementRepas = () => {
             return;
         }
         try {
+            const token = localStorage.getItem("token");
             const response = await axios.get(`http://localhost:8080/api/menus/getMenuByDate`, {
                 params: { date: menuDate },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             });
             setRepasDisponibles(response.data.repas);
             setMessage("");
@@ -56,7 +60,12 @@ const PaiementRepas = () => {
         };
 
         try {
-            const response = await axios.post("http://localhost:8080/api/repas/payer", payload);
+            const token = localStorage.getItem("token");
+            const response = await axios.post("http://localhost:8080/api/repas/payer", payload, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             const { message: successMessage, solde_restant, repas_payes } = response.data;
 
             setSolde(solde_restant); // Update the student's balance
@@ -78,7 +87,15 @@ const PaiementRepas = () => {
     useEffect(() => {
         const fetchInitialSolde = async () => {
             try {
-                const response = await axios.get(`http://localhost:8080/api/cartes-etudiants/${carteId}`);
+                const token = localStorage.getItem("token");
+                const response = await axios.get(
+                    `http://localhost:8080/api/cartes-etudiants/getCarteEtudiantByUtilisateur`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
                 setSolde(response.data.solde);
             } catch (error) {
                 setMessage("Impossible de récupérer le solde initial.");

@@ -11,9 +11,19 @@ const PlanificationMenus = () => {
     const [repasIdsQuotidien, setRepasIdsQuotidien] = useState([]);
     const [repasDisponibles, setRepasDisponibles] = useState([]);
 
+    // Récupérer le token depuis le stockage local ou autre source
+    const token = localStorage.getItem('authToken'); // Remplacez par votre méthode d'obtention du token
+
+    // Configuration de l'en-tête d'authentification avec le token
+    const authHeaders = {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    };
+
     // Récupérer les repas disponibles depuis l'API
     useEffect(() => {
-        axios.get("http://localhost:8080/api/repas")
+        axios.get("http://localhost:8080/api/repas", authHeaders)
             .then((response) => {
                 setRepasDisponibles(response.data); // Sauvegarder les repas récupérés depuis l'API
             })
@@ -86,7 +96,7 @@ const PlanificationMenus = () => {
             };
 
         // Send the request to the backend to save the menu
-        axios.post("http://localhost:8080/api/menus/planifier-hebdomadaire", menuData)
+        axios.post("http://localhost:8080/api/menus/planifier-hebdomadaire", menuData, authHeaders)
             .then((response) => {
                 console.log("Menu Sauvegardé :", response.data);
             })
@@ -94,7 +104,6 @@ const PlanificationMenus = () => {
                 console.error("Erreur lors de la sauvegarde du menu :", error);
             });
     };
-
 
     return (
         <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-md">

@@ -55,7 +55,7 @@ function App() {
           <Route
               path="/recharge_carte"
               element={
-                <ProtectedRoute allowedRoles={["EMPLOYE"]}>
+                <ProtectedRoute allowedRoles={["EMPLOYE","ETUDIANT"]}>
                   <RechargeCarte />
                 </ProtectedRoute>
               }
@@ -127,7 +127,7 @@ function App() {
           <Route
               path="/dashboard"
               element={
-                <ProtectedRoute allowedRoles={["ADMINISTRATEUR", "EMPLOYE"]}>
+                <ProtectedRoute allowedRoles={["ADMINISTRATEUR", "EMPLOYE","ETUDIANT"]}>
                   <Dashboard />
                 </ProtectedRoute>
               }

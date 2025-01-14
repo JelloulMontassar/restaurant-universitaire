@@ -1,12 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import {jwtDecode} from "jwt-decode";
 
 const RechargeCarte = () => {
+    const [role, setRole] = useState(""); // Role of the logged-in user
+    const [token, setToken] = useState(""); // JWT token
     const [cardNumber, setCardNumber] = useState("");
     const [cardData, setCardData] = useState(null);
     const [error, setError] = useState("");
     const [rechargeAmount, setRechargeAmount] = useState("");
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        // Simulate fetching the token from localStorage or an API
+        const fetchedToken = localStorage.getItem("token"); // Replace with your actual token fetching logic
+
+        if (fetchedToken) {
+            setToken(fetchedToken);
+
+            try {
+                // Decode the token to extract the role
+                const decodedToken = jwtDecode(fetchedToken);
+                const userRole = decodedToken.role; // Assuming the role is stored under the "role" key
+                setRole(userRole);
+
+                // If the role is "Etudiant", fetch card details
+                if (userRole === "ETUDIANT") {
+                    fetchCardDetailsForEtudiant(fetchedToken);
+                }
+            } catch (error) {
+                console.error("Invalid JWT token", error);
+            }
+        }
+    }, []);
+
+    const fetchCardDetailsForEtudiant = async (token) => {
+        try {
+            setLoading(true);
+            const response = await axios.get(
+                `http://localhost:8080/api/cartes-etudiants/getCarteEtudiantByUtilisateur`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            setCardData(response.data);
+            setError("");
+        } catch (err) {
+            setCardData(null);
+            setError("Impossible de récupérer les détails de votre carte.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSearch = async () => {
         try {
@@ -26,7 +73,7 @@ const RechargeCarte = () => {
         if (rechargeAmount && cardData) {
             try {
                 setLoading(true);
-                const response = await axios.post(
+                await axios.post(
                     `http://localhost:8080/api/cartes-etudiants/recharger/${cardData.id}?solde=${rechargeAmount}`
                 );
                 const newSolde = cardData.solde + parseFloat(rechargeAmount);
@@ -59,24 +106,26 @@ const RechargeCarte = () => {
 
     return (
         <div className="p-6 max-w-lg mx-auto bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-4">Recherche de Carte Étudiant</h2>
+            <h2 className="text-2xl font-bold mb-4">Gestion de Carte Étudiant</h2>
 
-            {/* Search Bar */}
-            <div className="mb-4">
-                <input
-                    type="text"
-                    placeholder="Entrez le numéro de carte"
-                    value={cardNumber}
-                    onChange={(e) => setCardNumber(e.target.value)}
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-                <button
-                    onClick={handleSearch}
-                    className="mt-2 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
-                >
-                    {loading ? "Chargement..." : "Rechercher"}
-                </button>
-            </div>
+            {/* Display search bar only for "Employe" */}
+            {role === "EMPLOYE" && (
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="Entrez le numéro de carte"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value)}
+                        className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                        onClick={handleSearch}
+                        className="mt-2 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
+                    >
+                        {loading ? "Chargement..." : "Rechercher"}
+                    </button>
+                </div>
+            )}
 
             {/* Error Message */}
             {error && <p className="text-red-500 mb-4">{error}</p>}

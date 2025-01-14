@@ -1,17 +1,46 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Profil = () => {
     const [user, setUser] = useState({
-        nomUtilisateur: "Dupont",
-        prenomUtilisateur: "Jean",
-        genre: "Masculin",
-        email: "jean.dupont@example.com",
-        ancienMotDePasse: "",
-        nouveauMotDePasse: "",
-        role: "ETUDIANT", // Le rôle est visible mais désactivé
+        id: "",
+        nomUtilisateur: "",
+        prenomUtilisateur: "",
+        genre: "",
+        email: "",
+        role: "",
     });
 
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Fetch user profile data from the backend
+        axios
+            .get("http://localhost:8080/api/utilisateurs/profil", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`, // Include token for authentication
+                },
+            })
+            .then((response) => {
+                const { data } = response;
+                setUser({
+                    ...user,
+                    id: data.id,
+                    nomUtilisateur: data.nomUtilisateur,
+                    prenomUtilisateur: data.prenomUtilisateur,
+                    genre: data.genre,
+                    email: data.email,
+                    role: data.role,
+                });
+                setLoading(false);
+            })
+            .catch((error) => {
+                console.error("Error fetching profile:", error);
+                setMessage("Erreur lors du chargement du profil.");
+                setLoading(false);
+            });
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -24,30 +53,44 @@ const Profil = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Si les champs de mot de passe sont remplis, vérifier qu'ils ne sont pas vides
-        if (
-            (user.ancienMotDePasse && user.nouveauMotDePasse) &&
-            (user.ancienMotDePasse === "" || user.nouveauMotDePasse === "")
-        ) {
-            setMessage("Veuillez entrer l'ancien mot de passe et le nouveau mot de passe.");
-            return;
-        }
 
-        // Si les deux champs de mot de passe sont remplis, simuler la mise à jour
-        if (user.ancienMotDePasse && user.nouveauMotDePasse) {
-            // Logique pour la modification du mot de passe ici
-        }
 
-        // Ici, on pourrait envoyer les informations au backend via une API pour la mise à jour
-        setMessage("Profil mis à jour avec succès !");
+        const updatedData = {
+            nomUtilisateur: user.nomUtilisateur,
+            prenomUtilisateur: user.prenomUtilisateur,
+            genre: user.genre,
+            email: user.email,
+            role: user.role
+        };
+
+        // Update user profile via backend
+        axios
+            .put(`http://localhost:8080/api/utilisateurs/modifier/${user.id}`, updatedData, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            })
+            .then((response) => {
+                setMessage("Profil mis à jour avec succès !");
+                setUser((prevState) => ({
+                    ...prevState
+                }));
+            })
+            .catch((error) => {
+                console.error("Error updating profile:", error);
+                setMessage("Erreur lors de la mise à jour du profil.");
+            });
     };
+
+    if (loading) {
+        return <div>Chargement...</div>;
+    }
 
     return (
         <div className="flex justify-center min-h-screen bg-gray-100 p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
                 <h2 className="text-2xl font-bold text-center mb-6">Gérer le Profil</h2>
 
-                {/* Message de succès ou d'erreur */}
                 {message && (
                     <div
                         className={`mb-4 p-3 rounded-md ${
@@ -98,8 +141,8 @@ const Profil = () => {
                             value={user.genre}
                             onChange={handleChange}
                         >
-                            <option value="Masculin">Masculin</option>
-                            <option value="Féminin">Féminin</option>
+                            <option value="MASCULIN">Masculin</option>
+                            <option value="FEMININ">Féminin</option>
                         </select>
                     </div>
 
@@ -117,36 +160,8 @@ const Profil = () => {
                         />
                     </div>
 
-                    {/* Champs de modification du mot de passe */}
-                    <div className="mb-4">
-                        <label className="block text-gray-700" htmlFor="ancienMotDePasse">
-                            Ancien Mot de Passe
-                        </label>
-                        <input
-                            type="password"
-                            id="ancienMotDePasse"
-                            name="ancienMotDePasse"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                            value={user.ancienMotDePasse}
-                            onChange={handleChange}
-                        />
-                    </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700" htmlFor="nouveauMotDePasse">
-                            Nouveau Mot de Passe
-                        </label>
-                        <input
-                            type="password"
-                            id="nouveauMotDePasse"
-                            name="nouveauMotDePasse"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                            value={user.nouveauMotDePasse}
-                            onChange={handleChange}
-                        />
-                    </div>
 
-                    {/* Champ désactivé pour le rôle */}
                     <div className="mb-4">
                         <label className="block text-gray-700" htmlFor="role">
                             Rôle

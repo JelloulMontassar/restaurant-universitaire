@@ -9,6 +9,9 @@ const GestionCartes = () => {
     const [userIdInput, setUserIdInput] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
 
+    // Get the token from localStorage or wherever it's stored
+    const token = localStorage.getItem("token"); // Replace with your token retrieval logic
+
     // Fetch all cartes on component mount
     useEffect(() => {
         fetchCartes();
@@ -16,7 +19,11 @@ const GestionCartes = () => {
 
     const fetchCartes = async () => {
         try {
-            const response = await axios.get(API_BASE_URL);
+            const response = await axios.get(API_BASE_URL, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Attach token to the request
+                },
+            });
             setCartes(response.data);
         } catch (error) {
             console.error("Erreur lors de la récupération des cartes :", error);
@@ -31,7 +38,11 @@ const GestionCartes = () => {
                 statut: "ACTIVE",
                 etudiant: { id: parseInt(userIdInput, 10) },
             };
-            const response = await axios.post(`${API_BASE_URL}/ajouter`, newCarte);
+            const response = await axios.post(`${API_BASE_URL}/ajouter`, newCarte, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Attach token to the request
+                },
+            });
             setCartes([...cartes, response.data]);
             alert("Carte créée avec succès !");
             closeModal();
@@ -44,7 +55,11 @@ const GestionCartes = () => {
     // Supprimer une carte
     const supprimerCarte = async (id) => {
         try {
-            await axios.delete(`${API_BASE_URL}/supprimer/${id}`);
+            await axios.delete(`${API_BASE_URL}/supprimer/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Attach token to the request
+                },
+            });
             setCartes(cartes.filter((carte) => carte.id !== id));
         } catch (error) {
             console.error("Erreur lors de la suppression de la carte :", error);
@@ -55,7 +70,11 @@ const GestionCartes = () => {
     const toggleCarteStatus = async (id, currentStatus) => {
         try {
             const endpoint = `${API_BASE_URL}/bloquer/${id}`;
-            const response = await axios.post(endpoint);
+            const response = await axios.post(endpoint, {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Attach token to the request
+                },
+            });
             setCartes(
                 cartes.map((carte) =>
                     carte.id === id ? { ...carte, statut: response.data.statut } : carte
