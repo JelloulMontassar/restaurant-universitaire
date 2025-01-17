@@ -25,7 +25,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="login" element={<Login />} />
+          <Route path="loginDashboard" element={<Login />} />
 
           {/* Role-Based Protected Routes */}
           <Route
