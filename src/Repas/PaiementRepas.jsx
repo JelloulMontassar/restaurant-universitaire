@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+// Helper function to generate a range of dates from startDate to endDate
+const generateDateRange = (startDate, endDate) => {
+    const dates = [];
+    let currentDate = new Date(startDate);
+    const end = new Date(endDate);
+
+    while (currentDate <= end) {
+        dates.push(new Date(currentDate).toISOString().split("T")[0]); // Format date as YYYY-MM-DD
+        currentDate.setDate(currentDate.getDate() + 1); // Increment by one day
+    }
+
+    return dates;
+};
+
 const PaiementRepas = () => {
     const [menuDate, setMenuDate] = useState(""); // Selected date for the menu
-    const [repasDisponibles, setRepasDisponibles] = useState([]); // Meals available
+    const [repasDisponibles, setRepasDisponibles] = useState({}); // Meals available (grouped by date)
     const [selectedRepas, setSelectedRepas] = useState([]); // Selected meals
     const [typePaiement, setTypePaiement] = useState(""); // Payment type
     const [solde, setSolde] = useState(null); // Student balance
@@ -17,18 +31,83 @@ const PaiementRepas = () => {
             setMessage("Veuillez sélectionner une date.");
             return;
         }
+
         try {
             const token = localStorage.getItem("token");
             const response = await axios.get(`http://localhost:8080/api/menus/getMenuByDate`, {
-                params: { date: menuDate },
+                params: { date: menuDate }, // Sending the selected date to the backend
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            setRepasDisponibles(response.data.repas);
+
+            const { startDate, endDate, repas } = response.data;
+
+            // Convert startDate and endDate to Date objects
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            // Calculate the total number of days between start and end dates
+            const totalDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+            // Prepare an array to store the meals by day
+            const mealsPerDay = [];
+            let currentIndex = 0;
+
+            // Distribute the meals across the days (PETIT_DEJEUNER, DEJEUNER, DINER)
+            while (currentIndex < repas.length) {
+                for (let day = 0; day < totalDays; day++) {
+                    // Create a day entry with the corresponding meal types
+                    if (!mealsPerDay[day]) {
+                        mealsPerDay[day] = { PETIT_DEJEUNER: [], DEJEUNER: [], DINER: [] };
+                    }
+
+                    // Assign the next PETIT_DEJEUNER, DEJEUNER, or DINER in sequence
+                    if (currentIndex < repas.length) {
+                        if (repas[currentIndex].type === "PETIT_DEJEUNER") {
+                            mealsPerDay[day].PETIT_DEJEUNER.push(repas[currentIndex]);
+                            currentIndex++;
+                        }
+                    }
+
+                    if (currentIndex < repas.length) {
+                        if (repas[currentIndex].type === "DEJEUNER") {
+                            mealsPerDay[day].DEJEUNER.push(repas[currentIndex]);
+                            currentIndex++;
+                        }
+                    }
+
+                    if (currentIndex < repas.length) {
+                        if (repas[currentIndex].type === "DINER") {
+                            mealsPerDay[day].DINER.push(repas[currentIndex]);
+                            currentIndex++;
+                        }
+                    }
+
+                    // Stop if all meals have been distributed
+                    if (currentIndex >= repas.length) break;
+                }
+            }
+
+            // Map each day with the actual date based on startDate
+            const availableDates = [];
+            for (let i = 0; i < totalDays; i++) {
+                const date = new Date(start);
+                date.setDate(start.getDate() + i);
+                availableDates.push(date.toISOString().split("T")[0]); // Format as YYYY-MM-DD
+            }
+
+            // Group meals by date and meal type
+            const groupedMeals = {};
+            availableDates.forEach((date, index) => {
+                groupedMeals[date] = mealsPerDay[index] || { PETIT_DEJEUNER: [], DEJEUNER: [], DINER: [] };
+            });
+
+            // Set the state with the grouped meals
+            setRepasDisponibles(groupedMeals);
             setMessage("");
         } catch (error) {
-            setRepasDisponibles([]);
+            setRepasDisponibles({});
             setMessage("Aucun menu trouvé pour cette date.");
         }
     };
@@ -128,22 +207,34 @@ const PaiementRepas = () => {
 
             {/* Liste des repas */}
             <h3 className="text-lg font-bold mb-2">Repas Disponibles</h3>
-            {repasDisponibles.length > 0 ? (
-                <ul className="mb-4">
-                    {repasDisponibles.map((repas) => (
-                        <li key={repas.id} className="flex items-center justify-between mb-2">
-                            <label className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedRepas.includes(repas.id)}
-                                    onChange={() => handleToggleRepas(repas.id)}
-                                    className="mr-2"
-                                />
-                                {repas.nom} - {repas.prixTotal} €
-                            </label>
-                        </li>
-                    ))}
-                </ul>
+            {Object.keys(repasDisponibles).length > 0 ? (
+                Object.keys(repasDisponibles).map((date) => (
+                    <div key={date} className="mb-6">
+                        <h4 className="text-lg font-bold">{date}</h4>
+                        <ul>
+                            {["PETIT_DEJEUNER", "DEJEUNER", "DINER"].map((mealType) => (
+                                <li key={mealType}>
+                                    <strong>{mealType}:</strong>
+                                    <ul>
+                                        {repasDisponibles[date][mealType].map((repas) => (
+                                            <li key={repas.id} className="flex items-center justify-between mb-2">
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedRepas.includes(repas.id)}
+                                                        onChange={() => handleToggleRepas(repas.id)}
+                                                        className="mr-2"
+                                                    />
+                                                    {repas.nom} - {repas.prixTotal} TND
+                                                </label>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))
             ) : (
                 <p>Aucun repas disponible pour cette date.</p>
             )}
@@ -161,22 +252,18 @@ const PaiementRepas = () => {
             </select>
 
             {/* Solde de l'étudiant */}
-            <p className="mb-4">Solde Actuel : <strong>{solde !== null ? `${solde} €` : "Chargement..."}</strong></p>
+            <p className="mb-4">Solde disponible: {solde} TND</p>
 
-            {/* Bouton de paiement */}
+            {/* Message */}
+            {message && <p className="text-red-500 mb-4">{message}</p>}
+
+            {/* Paiement Button */}
             <button
                 onClick={handlePaiement}
-                className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
+                className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
             >
-                Payer les Repas
+                Payer
             </button>
-
-            {/* Message de validation ou d'erreur */}
-            {message && (
-                <div className="mt-4 p-4 bg-gray-100 border border-gray-300 rounded-md">
-                    {message}
-                </div>
-            )}
         </div>
     );
 };

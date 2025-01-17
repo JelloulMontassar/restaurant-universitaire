@@ -1,115 +1,118 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const PlanificationMenus = () => {
-    // États pour les menus et les repas
-    const [typeMenu, setTypeMenu] = useState(""); // "HEBDOMADAIRE" ou "QUOTIDIEN"
+    const [typeMenu, setTypeMenu] = useState(""); // "HEBDOMADAIRE" or "QUOTIDIEN"
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
     const [repasIdsHebdo, setRepasIdsHebdo] = useState([]);
     const [repasIdsQuotidien, setRepasIdsQuotidien] = useState([]);
     const [repasDisponibles, setRepasDisponibles] = useState([]);
+    const navigate = useNavigate();
+    const token = localStorage.getItem("token");
 
-    // Récupérer le token depuis le stockage local ou autre source
-    const token = localStorage.getItem('authToken'); // Remplacez par votre méthode d'obtention du token
-
-    // Configuration de l'en-tête d'authentification avec le token
     const authHeaders = {
         headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
         },
     };
 
-    // Récupérer les repas disponibles depuis l'API
+    // Fetch available meals
     useEffect(() => {
-        axios.get("http://localhost:8080/api/repas", authHeaders)
+        axios
+            .get("http://localhost:8080/api/repas", authHeaders)
             .then((response) => {
-                setRepasDisponibles(response.data); // Sauvegarder les repas récupérés depuis l'API
+                setRepasDisponibles(response.data);
             })
             .catch((error) => {
-                console.error("Erreur lors de la récupération des repas :", error);
+                Swal.fire("Erreur", "Impossible de récupérer les repas disponibles.", "error");
+                console.error("Error fetching meals:", error);
             });
     }, []);
 
-    // Gérer le changement du type de menu
     const handleChangeTypeMenu = (e) => {
         setTypeMenu(e.target.value);
     };
 
-    // Gérer le changement de la date de début
     const handleChangeStartDate = (e) => {
         setStartDate(e.target.value);
     };
 
-    // Gérer le changement de la date de fin pour le menu hebdomadaire
     const handleChangeEndDate = (e) => {
         setEndDate(e.target.value);
     };
 
-    // Gérer le changement de la date pour le menu quotidien
     const handleChangeSelectedDate = (e) => {
         setSelectedDate(e.target.value);
     };
 
-    // Ajouter un repas à un jour spécifique pour le menu hebdomadaire
     const handleAddRepasHebdo = (jourIndex, repasId) => {
         const updatedRepasIds = [...repasIdsHebdo];
-        updatedRepasIds[jourIndex] = updatedRepasIds[jourIndex] || [];
-        if (!updatedRepasIds[jourIndex].includes(repasId)) {
-            updatedRepasIds[jourIndex].push(repasId);
-            setRepasIdsHebdo(updatedRepasIds);
-        }
-    };
 
-    // Supprimer un repas d'un jour spécifique pour le menu hebdomadaire
-    const handleRemoveRepasHebdo = (jourIndex, repasId) => {
-        const updatedRepasIds = [...repasIdsHebdo];
-        updatedRepasIds[jourIndex] = updatedRepasIds[jourIndex].filter((id) => id !== repasId);
+        if (!updatedRepasIds[jourIndex]) {
+            updatedRepasIds[jourIndex] = [];
+        }
+
+        updatedRepasIds[jourIndex].push(repasId); // Add the repasId for the specific day
+
         setRepasIdsHebdo(updatedRepasIds);
     };
 
-    // Ajouter un repas pour le menu quotidien
     const handleAddRepasQuotidien = (repasId) => {
-        if (!repasIdsQuotidien.includes(repasId)) {
-            setRepasIdsQuotidien([...repasIdsQuotidien, repasId]);
-        }
+        const updatedRepasIds = [...repasIdsQuotidien];
+
+        updatedRepasIds.push(repasId); // Add the repasId
+
+        setRepasIdsQuotidien(updatedRepasIds);
     };
 
-    // Supprimer un repas du menu quotidien
-    const handleRemoveRepasQuotidien = (repasId) => {
-        setRepasIdsQuotidien(repasIdsQuotidien.filter((id) => id !== repasId));
-    };
-
-    // Sauvegarder les menus
     const handleSaveMenu = () => {
-        const menuData = typeMenu === "HEBDOMADAIRE"
-            ? {
+        if (typeMenu === "HEBDOMADAIRE") {
+            const menuData = {
                 startDate,
                 endDate,
-                repasIds: repasIdsHebdo.map(dayIds => dayIds.map(id => id)), // Ensure repasIdsHebdo is an array of arrays
+                repasIds: repasIdsHebdo.map((jour) => jour), // Send only repasIds for each day
                 type: "HEBDOMADAIRE",
-            }
-            : {
-                date: selectedDate,
-                repasIds: repasIdsQuotidien,
             };
 
-        // Send the request to the backend to save the menu
-        axios.post("http://localhost:8080/api/menus/planifier-hebdomadaire", menuData, authHeaders)
-            .then((response) => {
-                console.log("Menu Sauvegardé :", response.data);
-            })
-            .catch((error) => {
-                console.error("Erreur lors de la sauvegarde du menu :", error);
-            });
+            axios
+                .post("http://localhost:8080/api/menus/planifier-hebdomadaire", menuData, authHeaders)
+                .then((response) => {
+                    Swal.fire("Succès", "Le menu hebdomadaire a été sauvegardé avec succès.", "success");
+                    navigate("/liste_menu");
+                })
+                .catch((error) => {
+                    Swal.fire("Erreur", "Échec de la sauvegarde du menu hebdomadaire.", "error");
+                    console.error("Error saving weekly menu:", error);
+                });
+        } else if (typeMenu === "QUOTIDIEN") {
+            const menuData = {
+                date: selectedDate,
+                repasIds: repasIdsQuotidien, // Send only repasIds for the daily menu
+                type: "QUOTIDIEN",
+            };
+
+            axios
+                .post("http://localhost:8080/api/menus/quotidien", menuData, authHeaders)
+                .then((response) => {
+                    Swal.fire("Succès", "Le menu quotidien a été sauvegardé avec succès.", "success");
+                    navigate("/liste_menu");
+                })
+                .catch((error) => {
+                    Swal.fire("Erreur", "Échec de la sauvegarde du menu quotidien.", "error");
+                    console.error("Error saving daily menu:", error);
+                });
+        }
     };
 
     return (
         <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
             <h2 className="text-2xl font-bold mb-4">Planification des Menus</h2>
 
-            {/* Choix du type de menu */}
+            {/* Menu type selection */}
             <div className="mb-6">
                 <label htmlFor="typeMenu" className="block text-lg font-bold mb-2">
                     Type de Menu
@@ -126,7 +129,7 @@ const PlanificationMenus = () => {
                 </select>
             </div>
 
-            {/* Interface pour le menu Hebdomadaire */}
+            {/* Weekly menu interface */}
             {typeMenu === "HEBDOMADAIRE" && (
                 <div className="mb-6">
                     <label htmlFor="startDate" className="block text-lg font-bold mb-2">
@@ -181,7 +184,7 @@ const PlanificationMenus = () => {
                 </div>
             )}
 
-            {/* Interface pour le menu Quotidien */}
+            {/* Daily menu interface */}
             {typeMenu === "QUOTIDIEN" && (
                 <div className="mb-6">
                     <label htmlFor="selectedDate" className="block text-lg font-bold mb-2">
@@ -219,7 +222,7 @@ const PlanificationMenus = () => {
                 </div>
             )}
 
-            {/* Bouton pour sauvegarder */}
+            {/* Save button */}
             <div className="mt-6">
                 <button
                     onClick={handleSaveMenu}

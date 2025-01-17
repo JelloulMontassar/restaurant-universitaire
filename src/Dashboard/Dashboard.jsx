@@ -15,6 +15,8 @@ const routes = [
     { path: "/historique_recharge", name: "Historique Recharge", roles: ["ADMINISTRATEUR", "EMPLOYE"] },
     { path: "/paiement_repas", name: "Paiement Repas", roles: ["ETUDIANT"] },
     { path: "/recu_paiement", name: "Reçu de Paiement", roles: ["ETUDIANT"] },
+    { path: "/liste_menu", name: "Liste menu", roles: ["ETUDIANT","EMPLOYE","ADMINISTRATEUR"] },
+
 ];
 
 const Dashboard = () => {
