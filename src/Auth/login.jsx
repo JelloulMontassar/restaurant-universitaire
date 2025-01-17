@@ -13,7 +13,7 @@ const Login = () => {
         setLoading(true); // Start loading
 
         try {
-            const response = await fetch("http://48.211.219.179/api/utilisateurs/authenticate", {
+            const response = await fetch("http://48.211.219.179/api/api/utilisateurs/authenticate", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
